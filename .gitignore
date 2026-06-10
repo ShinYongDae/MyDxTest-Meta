@@ -1,0 +1,13 @@
+Debug/
+Release/
+ipch/
+.svn/
+MyDxTest.aps
+MyDxTest.VC.db
+MyDxTest.ncb
+MyDxTest.opt
+MyDxTest.plg
+
+
+
+
