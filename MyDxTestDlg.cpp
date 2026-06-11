@@ -71,16 +71,23 @@ CMyDxTestDlg::CMyDxTestDlg(CWnd* pParent /*=NULL*/)
 	m_pRs274X = NULL;
 	m_bDraw = FALSE;
 	m_hMetaFile = NULL;
+	m_metaHdc = NULL;
 }
 
 CMyDxTestDlg::~CMyDxTestDlg()
 {
 //	m_memDC.DeleteDC();
-
+	
 	if(m_pRs274X)
 	{
 		delete m_pRs274X;
 		m_pRs274X = NULL;
+	}
+
+	if (m_hMetaFile)
+	{
+		::DeleteEnhMetaFile(m_hMetaFile);
+		m_hMetaFile = NULL;
 	}
 }
 
@@ -213,7 +220,7 @@ BOOL CMyDxTestDlg::OnInitDialog()
 	brush.DeleteObject();
 	font.DeleteObject();
 
-	//메타 파일 DC를 닫고 확장 메타파일의 핸들을 얻어 저장.
+	// 메타 파일 DC를 닫고 확장 메타파일의 핸들을 얻어 저장.
 	m_hMetaFile = m_metaDC.CloseEnhanced();
 */
 
@@ -264,9 +271,23 @@ void CMyDxTestDlg::OnPaint()
 
 		CDialog::OnPaint();
 
-		CRect client, rcMeta; GetDlgItem(IDC_STATIC_PIC)->GetClientRect(&client);
+		CRect client, rcMeta, rcDest, rcPxlClient;
+		GetDlgItem(IDC_STATIC_PIC)->GetClientRect(&client);
+		int nHt = client.Height();
+		int nWd = client.Width();
+
+		// DLU를 픽셀로 변환
+		rcPxlClient.CopyRect(client);
+		MapDialogRect(&rcPxlClient);
+
+		// 이제 client.Width()와 client.Height()는 실제 픽셀값으로 변경됨
+		int pxlClientW = rcPxlClient.Width();
+		int pxlClientH = rcPxlClient.Height();
+
 		double dMargin = 0.1;
 		FRECTC rt = m_pRs274X->GetFrameExtent();
+		double dRtW = (rt.X2 - rt.X1);
+		double dRtH = (rt.Y2 - rt.Y1);
 		m_nPixel_H = int((rt.X2 - rt.X1) * 1000.0 / m_dPixelResolution);
 		m_nPixel_V = int((rt.Y2 - rt.Y1) * 1000.0 / m_dPixelResolution);
 // 		m_nPixel_H = int((rt.X2 - rt.X1) * (1.0 + dMargin) * 1000.0 / m_dPixelResolution);
@@ -274,34 +295,65 @@ void CMyDxTestDlg::OnPaint()
 // 		SetScrlBarMax(m_nPixel_H, m_nPixel_V);
 // 		SetScrlBar(0,0);
 
-		int nHt = client.Height();
-		int nWd = client.Width();
-		double dRtoV = (double)m_nPixel_V / (double)nHt;
-		double dRtoH = (double)m_nPixel_H / (double)nWd;
+		double dRtoV = (double)dRtH / (double)nHt;
+		double dRtoH = (double)dRtW / (double)nWd;
+		//double dRtoV = (double)m_nPixel_V / (double)nHt;
+		//double dRtoH = (double)m_nPixel_H / (double)nWd;
 
-		if(dRtoH < dRtoV)
+		double dSize = dRtH;
+		if (dRtW < dRtH)
+			dSize = dRtW;
+		int nSize = 175;// 200;// 165;// (int)dSize;
+
+		//if (dRtoH > dRtoV)
+		//	dSize *= dRtoV;
+		//else
+		//	dSize *= dRtoH;
+		//
+		//int nSize = (int)dSize * 2 * 5.8;
+		//nSize = nWd;
+
+		rcMeta.left = client.left;
+		rcMeta.top = client.bottom;
+		rcMeta.right = client.left + nSize;// (double)m_nPixel_V * 0.001;
+		rcMeta.bottom = client.bottom + nSize;// (double)m_nPixel_H * 0.001;
+		//rcMeta.right = client.left + 317;// (double)m_nPixel_V * 0.001;
+		//rcMeta.bottom = client.bottom + 317;// (double)m_nPixel_H * 0.001;
+
+/*		//if(dRtoH < dRtoV)
+		if (dRtoH > dRtoV)
 		{
 			rcMeta.left = client.left; 
-			rcMeta.top = client.bottom-nWd*dMargin;
-			rcMeta.right = client.left+int((double)m_nPixel_H/dRtoH); 
-			rcMeta.bottom = client.bottom+int((double)m_nPixel_H/dRtoH)-nWd*dMargin; 
+			rcMeta.top = client.bottom;
+			rcMeta.right = client.left + (double)nWd * 0.25; //0.355
+			rcMeta.bottom = client.bottom + (double)nHt * 0.25; //0.355
+			//rcMeta.left = client.left; 
+			//rcMeta.top = client.bottom-nWd*dMargin;
+			//rcMeta.right = client.left+int((double)m_nPixel_H/dRtoH); 
+			//rcMeta.bottom = client.bottom+int((double)m_nPixel_H/dRtoH)-nWd*dMargin; 
 		}
 		else
 		{
-			rcMeta.left = client.left; 
-			rcMeta.top = client.bottom-nWd*dMargin;
-			rcMeta.right = client.left+int(m_nPixel_V/dRtoV)/4;
-			rcMeta.bottom = client.bottom+int(m_nPixel_V/dRtoV)/4-nWd*dMargin;
+			rcMeta.left = client.left;
+			rcMeta.top = client.bottom;
+			rcMeta.right = client.left + (double)nWd * 0.25; //0.355
+			rcMeta.bottom = client.bottom + (double)nHt * 0.25; //0.355
+			//rcMeta.left = client.left; 
+			//rcMeta.top = client.bottom-nWd*dMargin;
+			//rcMeta.right = client.left+int(m_nPixel_V/dRtoV)/4;
+			//rcMeta.bottom = client.bottom+int(m_nPixel_V/dRtoV)/4-nWd*dMargin;
 		}
+		*/
 /*
 		rcMeta.left = client.left; rcMeta.top = client.bottom;//(client.bottom+client.top)/2;
 		rcMeta.right = client.left+m_nPixel_H; rcMeta.bottom = client.bottom+m_nPixel_V;
 //		rcMeta.right = client.right; rcMeta.bottom = client.bottom+client.Height();
 */
+
 		HWND hWnd = GetDlgItem(IDC_STATIC_PIC)->m_hWnd;
 		HDC  hdc = ::GetDC(hWnd);
 
-		if(NULL !=hdc)
+		if(NULL != hdc)
 		{
 			DrawBk(hdc);
 			if(m_bDraw)
@@ -309,12 +361,36 @@ void CMyDxTestDlg::OnPaint()
 				CDC* cdc = CDC::FromHandle(hdc);
 				//HENHMETAFILE hMetaFile = (HENHMETAFILE)m_metaDC.GetSafeHdc();
 
-				cdc->PlayMetaFile(m_hMetaFile, &rcMeta);
+				
+				if (m_hMetaFile)
+				{
+					rcDest.CopyRect(rcMeta);
+					//cdc->PlayMetaFile(m_hMetaFile, &client); // 확장 메타파일 플레이.
+					cdc->PlayMetaFile(m_hMetaFile, &rcDest); // 확장 메타파일 플레이.
+					//cdc->PlayMetaFile(m_hMetaFile, &rcMeta);
+				}
 			}
 
 			::ReleaseDC(hWnd, hdc);
 		}
+/*
+// 클립보드에 복사 예제 코드
+void CMyMetaView::OnEditCopy()
+{
+	COleDataSource* pOleData;
+	tagSTGMEDIUM* data;
 
+	pOleData = new COleDataSource;
+	data = new tagSTGMEDIUM;
+	data->tymed = TYMED_ENHMF;
+	data->hEnhMetaFile = m_hMF;
+	pOleData->CacheData(CF_ENHMETAFILE, data);
+	pOleData->FlushClipboard();
+	pOleData->SetClipboard();
+
+	delete data;
+}
+*/
 // 		COLORREF BkColor = RGB(0,0,0);//GetSysColor(COLOR_3DFACE);
 // 		HDC& hdc = myDx.BeginPaint(BkColor);
 
@@ -578,15 +654,29 @@ void CMyDxTestDlg::OnButton1()
 
 */
 	m_dPixelResolution = 10.0;
+	//m_dPixelResolution = 5.0;
 	UpdateData(FALSE);
 
+	//HDC m_metaHdc;
 	if (!m_hMetaFile)
 	{
-		m_metaDC.PatBlt(0, 0, 10000, 10000, BLACKNESS);
-		HDC hdc = m_metaDC.GetSafeHdc();
-		DrawRs274X(hdc, TRUE);
+		m_metaDC.PatBlt(0, 0, 38000, 38000, BLACKNESS); // 33000, 33000 --> 200
 
-		//메타 파일 DC를 닫고 확장 메타파일의 핸들을 얻어 저장.
+		// 확장 메타파일 생성
+		//char szDesc[MAX_PATH];
+		//StringToChar(_T("Enhanced Metafile Application"), szDesc);
+		//CRect rc(0, 0, 10000, 10000);
+		//m_metaDC.CreateEnhanced(NULL, NULL, rc, _T("Enhanced Metafile Application"));
+		//m_metaDC.CreateEnhanced(NULL, NULL, rc, szDesc);
+
+		// MM_HIMETRIC 맵핑모드를 이용하여 그래픽 함수 레코딩
+		//m_metaDC.SetMapMode(MM_HIMETRIC);
+
+		m_metaHdc = m_metaDC.GetSafeHdc();
+		DrawRs274X(m_metaHdc, TRUE);
+		// 레코딩 완료
+
+		// 메타 파일 DC를 닫고 확장 메타파일의 핸들을 얻어 저장.
 		m_hMetaFile = m_metaDC.CloseEnhanced();
 	}
 
@@ -597,7 +687,12 @@ void CMyDxTestDlg::OnButton1()
 // 	SetScrlBarMax(m_nPixel_H, m_nPixel_V);
 // 	SetScrlBar(0,0);
 
-
+	//if (m_metaHdc)
+	//{
+	//	DrawRs274X(m_metaHdc, TRUE);
+	//	// 메타 파일 DC를 닫고 확장 메타파일의 핸들을 얻어 저장.
+	//	m_hMetaFile = m_metaDC.CloseEnhanced();
+	//}
 
 	m_bDraw = TRUE;
 	InvalidateRect(&client);
@@ -615,9 +710,16 @@ void CMyDxTestDlg::OnButton1()
 	/* GDI plus로 저장하기 !! */  
 	CLSID jpegClsid;  
 	GetEncoderClsid(L"image/jpeg", &jpegClsid);  
-	image.Save(L"C:\\test.jpg", &jpegClsid, NULL);  
+	image.Save(L"D:\\test.jpg", &jpegClsid, NULL);  
 
 
+}
+
+void CMyDxTestDlg::StringToChar(CString str, char* szStr)  // char* returned must be deleted... 
+{
+	int nLen = str.GetLength();
+	strcpy(szStr, CT2A(str));
+	szStr[nLen] = _T('\0');
 }
 
 int CMyDxTestDlg::GetEncoderClsid(const WCHAR *format, CLSID *pClsid)  

@@ -164,7 +164,7 @@ void CFileFormatRs274X::Drawing_0()
 	nDevide = int(double(nNumOfObj) / 4.0);
 	nSt = nDevide * 0;
 //	nNumOfObj = nSt+nDevide;
-//	nNumOfObj = nNumOfObj / 2;
+//	nNumOfObj = n NumOfObj / 2;
 
 // 	m_nPrevAttribute = 16;
 // 	m_nPrevPolarity = 3;

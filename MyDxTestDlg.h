@@ -20,6 +20,7 @@ class CMyDxTestDlg : public CDialog
 	CDC m_memDC;
 	CMetaFileDC m_metaDC;
 	HENHMETAFILE m_hMetaFile;
+	HDC m_metaHdc;
 
 	BOOL m_bDraw;
 //	CImage m_Image;
@@ -41,6 +42,8 @@ class CMyDxTestDlg : public CDialog
 
 	int GetEncoderClsid(const WCHAR *format, CLSID *pClsid) ;
 	void Zoom();
+
+	void StringToChar(CString str, char* szStr);  // char* returned must be deleted... 
 
 
 // Construction
