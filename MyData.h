@@ -502,7 +502,6 @@ public:
 	CfPoint3D CenterPoint(void);
 };
 
-
 class CfRect : public tagfRECT   
 {
 public:
@@ -580,18 +579,18 @@ struct MeshTriangle
 
 class GInterPolation  //현재는 Bilinear 차후 tri kri등..넣을것임
 {
-public:
-int m_nInterPolationMode; 
-CfPoint3D m_fptBLP1;							
-CfPoint3D m_fptBLP2;
-CfPoint3D m_fptBLP3;
-CfPoint3D m_fptBLP4;
-BOOL m_bCaculated;
-void SetInterPolationMode(int mode);
-BOOL CalculateInterPolation(CfPoint3D LeftBottom,CfPoint3D LeftTop,CfPoint3D RightTop,CfPoint3D RightBottom,CfPoint3D fpt,double& dResult);
-BOOL CalculateInterPolation(CfQuad3D fQuad,CfPoint3D fpt,double& dResult);
-BOOL GetBilinearIntersectPoint(CfPoint3D &fpt1,CfPoint3D &fpt2,CfPoint3D &fpt3,CfPoint3D &fpt4);
-BOOL GetBilinearIntersectPoint3D(CfQuad3D Qaud,CfPoint3D fCurPos,double& ResultHeight,CfPoint3D &fpt1,CfPoint3D &fpt2,CfPoint3D &fpt3,CfPoint3D &fpt4);
+public:	
+	int m_nInterPolationMode; 
+	CfPoint3D m_fptBLP1;							
+	CfPoint3D m_fptBLP2;
+	CfPoint3D m_fptBLP3;
+	CfPoint3D m_fptBLP4;
+	BOOL m_bCaculated;
+	void SetInterPolationMode(int mode);
+	BOOL CalculateInterPolation(CfPoint3D LeftBottom,CfPoint3D LeftTop,CfPoint3D RightTop,CfPoint3D RightBottom,CfPoint3D fpt,double& dResult);
+	BOOL CalculateInterPolation(CfQuad3D fQuad,CfPoint3D fpt,double& dResult);
+	BOOL GetBilinearIntersectPoint(CfPoint3D &fpt1,CfPoint3D &fpt2,CfPoint3D &fpt3,CfPoint3D &fpt4);
+	BOOL GetBilinearIntersectPoint3D(CfQuad3D Qaud,CfPoint3D fCurPos,double& ResultHeight,CfPoint3D &fpt1,CfPoint3D &fpt2,CfPoint3D &fpt3,CfPoint3D &fpt4);
 };
 
 /*
@@ -648,18 +647,11 @@ typedef CArray<CfQuad, CfQuad> CArfQuad;
 typedef CArray<CfPoint3D, CfPoint3D> CArfPt3D;
 typedef CArray<CfQuad3D, CfQuad3D> CArfQuad3D;
 
-
-
-
-
 struct structEnumSerial{
 	CString strPortName;
 	CString strPortDesc;
 	int nPortNum;
 };
-
-
-
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++
 // OpenGLView Redo/Undo History structure
